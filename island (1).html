@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dynamic Island OS</title>
+<style>
+:root{--bg:#eef0f4;--fg:#15171c;--chip:#fff;--line:#d5d9e0;--sc:1;--op:1;--glow:.7;--dur:.6s;--ez:cubic-bezier(.34,1.4,.5,1);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d0f14;--fg:#f2f4f8;--chip:#1b1e26;--line:#2a2e38}}
+:root[data-theme="dark"]{--bg:#0d0f14;--fg:#f2f4f8;--chip:#1b1e26;--line:#2a2e38}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;align-items:center;padding:16px 12px 28px}
+h1{font-size:18px;margin:0 0 4px}.hint{font-size:12.5px;opacity:.65;margin:0 0 12px;text-align:center;max-width:340px}
+.phone{position:relative;width:min(340px,100%);height:440px;border-radius:38px;border:6px solid #000;overflow:hidden;background:linear-gradient(160deg,#2b2a6e,#8a2d7a 55%,#ff8a5a);box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.wall{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:70px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.3)}
+.wall b{font-size:72px;font-weight:300;letter-spacing:-2px}.wall span{font-size:14px;opacity:.85}
+#win{position:absolute;top:10px;left:50%;width:min(340px,100%);height:320px;pointer-events:none;transform:translateX(-50%) scale(var(--sc));transform-origin:top center}
+#bx{pointer-events:auto;position:absolute;top:0;left:50%;transform:translateX(-50%);width:min(var(--cw,120px),calc(100% - 10px));height:34px;border-radius:20px;touch-action:none;user-select:none;-webkit-user-select:none;transition:width var(--dur) var(--ez),height var(--dur) var(--ez),border-radius calc(var(--dur)*.8)}
+#bx.open{width:100%;height:130px;border-radius:32px}#bx.open.tall{height:300px;border-radius:36px}
+#bx.swap{animation:swap calc(var(--dur)*.8) var(--ez)}@keyframes swap{0%{transform:translateX(-50%) scale(.84,.9)}60%{transform:translateX(-50%) scale(1.07,1.04)}100%{transform:translateX(-50%)}}
+#bx.shake{animation:shake .6s}@keyframes shake{20%,60%{transform:translateX(-54%)}40%,80%{transform:translateX(-46%)}}
+#hl{position:absolute;inset:-3px;border-radius:inherit;background:linear-gradient(90deg,#00b4ff,#ff2bd6,#ffa31a,#00e0a0);filter:blur(13px);opacity:0;transition:opacity .6s}
+#bx.siri #hl{opacity:var(--glow);animation:hue 5s linear infinite}@keyframes hue{to{filter:blur(13px) hue-rotate(360deg)}}
+#isl{position:absolute;inset:0;border-radius:inherit;overflow:hidden;color:#fff;background:rgba(0,0,0,var(--op));box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#isl.glass{backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);box-shadow:0 8px 24px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.12),inset 0 1px 0 rgba(255,255,255,.28)}
+#isl.glass::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(140px 70px at var(--px,50%) var(--py,0%),rgba(255,255,255,.2),transparent 70%),linear-gradient(180deg,rgba(255,255,255,.1),transparent 45%)}
+.mini,.full{position:absolute;inset:0;transition:opacity calc(var(--dur)*.5),transform var(--dur) var(--ez),filter calc(var(--dur)*.6)}
+.mini{display:flex;align-items:center;justify-content:space-between;padding:0 12px}
+.full{padding:14px 18px;opacity:0;transform:scale(.88);filter:blur(8px);pointer-events:none}
+#bx.open .mini{opacity:0;transform:scale(1.15);filter:blur(6px);pointer-events:none}
+#bx.open .full{opacity:1;transform:none;filter:none;pointer-events:auto;transition-delay:.12s}
+.row{display:flex;align-items:center;gap:12px}.grow{flex:1;min-width:0}.sb{justify-content:space-between}
+.t{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.s{font-size:12px;opacity:.6;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.m0{margin:0;opacity:.9;font-variant-numeric:tabular-nums}
+.art{width:22px;height:22px;border-radius:7px;flex:none;background:linear-gradient(135deg,#1ed760,#0b8f3c)}
+.full .art{width:46px;height:46px;border-radius:12px}.art.pop{animation:pop .6s var(--ez)}@keyframes pop{from{transform:scale(.4) rotate(-20deg);opacity:0}}
+.wave{display:flex;align-items:center;gap:3px;height:16px}.wave b{width:3px;height:100%;border-radius:2px;background:#1ed760;animation:eq .9s ease-in-out infinite alternate}
+.wave b:nth-child(2){animation-delay:-.3s}.wave b:nth-child(3){animation-delay:-.6s}.wave b:nth-child(4){animation-delay:-.15s}.wave b:nth-child(5){animation-delay:-.45s}
+#bx.paused .wave b{animation-play-state:paused;transform:scaleY(.2);transition:transform .5s}
+.rb b{background:linear-gradient(#00b4ff,#ff2bd6)}@keyframes eq{from{transform:scaleY(.2)}to{transform:scaleY(1)}}
+.bar{height:5px;border-radius:3px;background:#333;margin:10px 0 5px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:#fff;border-radius:3px}
+.times{display:flex;justify-content:space-between;font-size:11px;opacity:.55;font-variant-numeric:tabular-nums}
+.ctrl{display:flex;justify-content:center;gap:22px;margin-top:2px}.ctrl svg{width:26px;height:26px;fill:#fff;cursor:pointer;transition:transform .15s}.ctrl svg:active{transform:scale(.75)}
+.pill{border:0;border-radius:18px;padding:8px 13px;font-size:12px;font-weight:600;color:#fff;background:#2a2a2e;cursor:pointer;transition:transform .15s,background .2s}.pill:active{transform:scale(.9)}
+.pill.red{background:#ff3b30}.pill.green{background:#30d158}.pill.on{background:#fff;color:#000}
+.chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:#30d158;animation:pulse 1.1s infinite;flex:none}@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(48,209,88,.7)}100%{box-shadow:0 0 0 9px rgba(48,209,88,0)}}
+.avatar{position:relative;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#ff9a5a,#d1407f) center/cover;display:grid;place-items:center;font-weight:700;font-size:18px;flex:none}
+.ring-on .avatar::before,.ring-on .avatar::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid #30d158;animation:rip 1.8s ease-out infinite}.ring-on .avatar::after{animation-delay:.9s}@keyframes rip{from{transform:scale(1);opacity:.8}to{transform:scale(1.8);opacity:0}}
+.badge{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-weight:800;flex:none}.badge.sm{width:22px;height:22px;border-radius:7px;font-size:12px}
+.ring{transform:rotate(-90deg);flex:none}.ring circle{fill:none;stroke-width:4;stroke-linecap:round}.ring .bg{stroke:#333}.ring .fg{stroke:#ff9f0a}
+.big{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
+canvas{width:100%;height:78px;display:block;border-radius:14px;background:#000}
+.stt{font-size:11px;opacity:.6;margin:6px 0 4px;min-height:14px}
+.log{height:92px;overflow:auto;display:flex;flex-direction:column;gap:6px;scrollbar-width:none}.log::-webkit-scrollbar{display:none}
+.msg{font-size:12.5px;line-height:1.35;padding:7px 10px;border-radius:14px;max-width:88%;animation:in .35s var(--ez)}@keyframes in{from{opacity:0;transform:translateY(8px) scale(.95)}}
+.msg.u{align-self:flex-end;background:#0a84ff}.msg.a{align-self:flex-start;background:#26262b}.msg.sys{align-self:center;background:#3a2a10;color:#ffd08a;font-size:11.5px}
+.inp{display:flex;gap:6px;margin-top:8px}.inp input{flex:1;min-width:0;border:0;border-radius:18px;padding:8px 12px;background:#26262b;color:#fff;font-size:13px;outline:none}
+.hub{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.hub .pill{padding:12px 4px;border-radius:16px;text-align:center}
+.act{display:flex;align-items:center;justify-content:space-between;font-size:13px;padding:6px 0;border-top:1px solid #222}
+.set{height:228px;overflow:auto;scrollbar-width:none;margin-top:8px}.set::-webkit-scrollbar{display:none}
+.set label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12.5px;padding:7px 0;border-top:1px solid #1d1d20}.set input[type=range]{width:46%;accent-color:#fff}.set input[type=checkbox]{width:38px;height:22px;accent-color:#30d158}
+.apps{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0}.apps label{border:0;padding:0}.apps input{display:none}.apps span{display:block;padding:5px 10px;border-radius:14px;background:#26262b;font-size:11.5px;opacity:.5}.apps input:checked+span{background:#fff;color:#000;opacity:1}
+#tst{position:absolute;left:0;right:0;bottom:5px;text-align:center;font-size:10.5px;color:#ffd08a;opacity:0;transition:opacity .3s;pointer-events:none;z-index:3}#tst.on{opacity:1}
+.demo{position:absolute;right:16px;bottom:5px;font-size:9px;opacity:.35}
+.btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;max-width:360px}.btns p{width:100%;margin:0;text-align:center;font-size:12px;opacity:.6}
+.btns button{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:20px;padding:9px 14px;font-size:13px;cursor:pointer}
+html.native,html.native body{background:transparent;padding:0;display:block;min-height:0;height:100%}
+html.native #pg>*:not(.phone){display:none}html.native .phone{position:static;width:auto;height:auto;border:0;border-radius:0;background:none;box-shadow:none;overflow:visible}
+html.native .wall{display:none}html.native #win{position:fixed;inset:0;top:0;left:0;transform:none;width:auto;height:auto}
+html.native #bx.open,html.native #bx.open.tall{height:100%}html.native #isl{box-shadow:none}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div id="pg">
+<h1>Dynamic Island OS</h1>
+<p class="hint">Toca: expandir · Mantén: centro de controles · Desliza ↓ ↑ o ← → · Toca fuera: cerrar</p>
+<div class="phone"><div class="wall"><b id="clk">9:41</b><span>Pantalla de bloqueo</span></div>
+<div id="win"><div id="bx"><div id="hl"></div><div id="isl" class="glass"><div class="mini"></div><div class="full"></div><div id="tst"></div></div></div></div></div>
+<div class="btns" id="btns"><p>Demo de diseño: en Android estos eventos los envía el sistema</p>
+<button data-d="media">Música</button><button data-d="call">Llamada</button><button data-d="notif">Notificación</button><button data-d="timer">Temporizador</button><button data-d="sw">Cronómetro</button><button data-d="siri">Siri</button><button data-d="hub">Centro</button><button data-d="set">Ajustes</button></div>
+</div>
+<script>
+/* API para Kotlin (evaluateJavascript): Island.setMedia({title,artist,art,pos,dur,playing}) · removeMedia() · incomingCall({name,number,photo,bt}) · callState("active"|"end") ·
+   notify({key,title,text,pkg}) · heard(texto) · aiReply(texto) · setAIEngine(async fn). JS→Kotlin (Android.*): media(a) call(a) openApp(pkg) askAI(t) listen() setMode(m) setPos(x,y) close() */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const bx=$("#bx"),isl=$("#isl"),mini=$(".mini"),full=$(".full"),win=$("#win");
+const NAT=typeof Android!=="undefined";if(NAT)document.documentElement.classList.add("native");
+const br=(f,...a)=>{try{Android[f](...a)}catch(e){}};const hasN=f=>NAT&&typeof Android[f]==="function";
+const fmt=s=>{s=Math.max(0,Math.floor(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const DEF={on:1,sc:1,x:50,y:10,op:100,glow:70,spd:1,glass:1,siri:1,gest:1,autoM:1,autoC:1,apps:{wa:1,ig:1,tg:1,dc:1,gm:1,yt:1,tt:1,sms:1}};
+let S=JSON.parse(JSON.stringify(DEF));try{Object.assign(S,JSON.parse(localStorage.getItem("di_s")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("di_s",JSON.stringify(S))}catch(e){}};
+const APPS={wa:["WhatsApp","#25d366","W","com.whatsapp"],ig:["Instagram","#e1306c","I","com.instagram.android"],tg:["Telegram","#2aabee","T","org.telegram.messenger"],dc:["Discord","#5865f2","D","com.discord"],gm:["Gmail","#ea4335","G","com.google.android.gm"],yt:["YouTube","#ff0000","Y","com.google.android.youtube"],tt:["TikTok","#222","K","com.zhiliaoapp.musically"],sms:["Mensajes","#34c759","M","com.google.android.apps.messaging"]};
+function apply(){const r=document.documentElement.style;r.setProperty("--sc",S.sc);r.setProperty("--op",S.op/100);r.setProperty("--glow",S.glow/100);r.setProperty("--dur",(.6/S.spd).toFixed(2)+"s");
+isl.classList.toggle("glass",!!S.glass);win.style.display=S.on?"":"none";if(!NAT){win.style.left=S.x+"%";win.style.top=S.y+"px"}else br("setPos",S.x,S.y)}
+const PRI={call:0,siri:1,notif:2,media:3,timer:4,sw:5},TALL=["siri","hub","set"];
+let acts=[],D={},open=false,view=null,sel=null,cl,nt,tt;
+const curV=()=>view||(acts.includes(sel)?sel:acts[0]);
+const add=t=>{if(!acts.includes(t))acts.push(t);acts.sort((a,b)=>PRI[a]-PRI[b])};
+function rem(t){acts=acts.filter(a=>a!==t);delete D[t];if(sel===t)sel=acts[0];if(!acts.length)setOpen(false);else if(open&&!view)setOpen(true);else render()}
+function toast(m){const e=$("#tst");e.textContent=m;e.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("on"),2800)}
+const hue=s=>[...String(s)].reduce((a,c)=>(a*31+c.charCodeAt(0))%360,7);
+const art=m=>m.art?`background:url(${m.art}) center/cover`:`background:conic-gradient(hsl(${hue(m.title)},80%,55%),hsl(${hue(m.title)+70},80%,38%),hsl(${hue(m.title)},80%,55%))`;
+const wave='<div class="wave"><b></b><b></b><b></b><b></b><b></b></div>',C=100.53;
+const ring=(r,k)=>`<svg class="ring" width="${r*2+6}" height="${r*2+6}" viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="16"/><circle class="fg" data-ring="${k}" cx="20" cy="20" r="16" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg>`;
+const IC={play:'<path d="M8 5v14l11-7z"/>',pause:'<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>',prev:'<path d="M6 6h2v12H6zM9.5 12l9 6V6z"/>',next:'<path d="M16 6h2v12h-2zM14.5 12l-9 6V6z"/>'};
+const svg=k=>`<svg viewBox="0 0 24 24">${IC[k]}</svg>`;
+const bt=(a,l,c="")=>`<button class="pill ${c}" data-a="${a}">${l}</button>`,demo=NAT?"":'<div class="demo">Demo de diseño</div>';
+const badge=(n,c)=>`<span class="badge ${c||""}" style="background:${n.c}">${n.ab}</span>`;
+function mL(t){const d=D[t];return t==="media"?`<span class="art" style="${art(d)}"></span>`:t==="call"?'<span class="dot"></span>':t==="timer"?ring(9,"timer"):t==="sw"?"<span>⏱</span>":t==="notif"?badge(d,"sm"):'<span class="wave rb"><b></b><b></b><b></b></span>'}
+function mR(t){const d=D[t];return t==="media"?wave:t==="call"?'<span class="s m0" data-b="ct"></span>':t==="timer"?'<span class="s m0" data-b="tt"></span>':t==="sw"?'<span class="s m0" data-b="st"></span>':t==="notif"?`<span class="s m0">${esc(d.app)}</span>`:'<span class="wave rb"><b></b><b></b><b></b><b></b><b></b></span>'}
+const F={
+media:()=>{const m=D.media;return `<div class="row"><span class="art" style="${art(m)}"></span><div class="grow"><div class="t">${esc(m.title)}</div><div class="s">${esc(m.artist)}</div></div>${wave}</div><div class="bar"><i data-w="mp"></i></div><div class="times"><span data-b="mt"></span><span data-b="md"></span></div><div class="ctrl"><span data-a="prev">${svg("prev")}</span><span data-a="play" id="pp"></span><span data-a="next">${svg("next")}</span></div>${demo}`},
+call:()=>{const c=D.call,r=c.st==="ring";return `<div class="row ${r?"ring-on":""}"><div class="avatar" style="${c.photo?`background-image:url(${c.photo})`:""}">${c.photo?"":esc((c.name||"?")[0])}</div><div class="grow"><div class="t">${esc(c.name||c.number)}</div><div class="s">${esc(c.number||"")}</div><div class="s" style="opacity:.9">${r?"Llamada entrante…":c.st==="end"?"Finalizada · "+fmt(c.dur):'En llamada · <span data-b="ct"></span>'}</div></div></div><div class="chips sb">${r?bt("reject","Rechazar","red")+bt("cmute","Silenciar")+bt("answer","Aceptar","green"):c.st==="end"?"":bt("cmute",c.mute?"Silenciado":"Silenciar",c.mute?"on":"")+bt("spk","Altavoz",c.spk?"on":"")+(c.bt?bt("bt","Bluetooth"):"")+bt("hang","Colgar","red")}</div>${demo}`},
+notif:()=>{const n=D.notif;return `<div class="row">${badge(n)}<div class="grow"><div class="s" style="margin:0">${esc(n.app)}</div><div class="t">${esc(n.title)}</div><div class="s" style="opacity:.85">${esc(n.text)}</div></div></div><div class="chips">${bt("open","Abrir","green")}${bt("dis","Descartar")}</div>${demo}`},
+timer:()=>{const t=D.timer;return `<div class="row" style="gap:16px">${ring(26,"timer")}<div class="grow"><div class="s" style="margin:0">${t.done?"¡Tiempo!":"Temporizador"}</div><div class="big" data-b="tt"></div></div></div><div class="chips">${bt("t1","+1m")}${bt("t5","+5m")}${bt("tgo",t.run?"Pausar":"Iniciar","green")}${bt("trs","Reiniciar")}${t.done?bt("tstop","Detener","red"):""}</div>`},
+sw:()=>`<div class="row sb"><div><div class="s" style="margin:0">Cronómetro</div><div class="big" data-b="st"></div></div>${ring(22,"sw")}</div><div class="chips">${bt("sgo",D.sw.run?"Pausar":"Iniciar","green")}${bt("srs","Reiniciar")}${bt("sx","Cerrar","red")}</div>`,
+siri:()=>`<canvas id="cv" width="640" height="156"></canvas><div class="stt" id="sst"></div><div class="log" id="log"></div><div class="inp"><input id="qi" placeholder="Escribe a Siri…" autocomplete="off">${bt("mic","🎙")}${bt("send","Enviar","green")}${bt("cancel","✕","red")}</div>`,
+hub:()=>`<div class="s" style="margin:0">Centro de controles</div><div class="hub">${bt("h-siri","Siri")}${bt("h-timer","Timer")}${bt("h-sw","Crono")}${bt("h-set","Ajustes")}</div>${acts.map(a=>`<div class="act"><span>${{media:"Música",call:"Llamada",notif:"Notificación",timer:"Temporizador",sw:"Cronómetro",siri:"Siri"}[a]}</span>${bt("x-"+a,"Cerrar")}</div>`).join("")||'<div class="s">Sin actividades activas</div>'}`,
+set:()=>{const R=[["on","Dynamic Island","t"],["sc","Tamaño","r",.8,1.3,.05],["x","Posición horizontal","r",20,80,1],["y","Posición vertical","r",0,40,1],["op","Transparencia","r",40,100,5],["glow","Intensidad de brillo","r",0,100,5],["spd","Velocidad de animación","r",.5,2,.1],["glass","Efecto cristal","t"],["siri","Siri","t"],["gest","Gestos","t"],["autoM","Expandir al iniciar música","t"],["autoC","Expandir en llamadas","t"]];
+return `<div class="s" style="margin:0">Ajustes · se guardan solos</div><div class="set">${R.map(([k,l,ty,a,b,st])=>`<label>${l}${ty==="t"?`<input type="checkbox" data-k="${k}" ${S[k]?"checked":""}>`:`<input type="range" data-k="${k}" min="${a}" max="${b}" step="${st}" value="${S[k]}">`}</label>`).join("")}<div class="s" style="margin-top:8px">Notificaciones que aparecen</div><div class="apps">${Object.keys(APPS).map(k=>`<label><input type="checkbox" data-ap="${k}" ${S.apps[k]?"checked":""}><span>${APPS[k][0]}</span></label>`).join("")}</div></div>`}};
+function render(){mini.innerHTML=acts.length?mL(acts[0])+mR(acts[1]||acts[0]):"";bx.style.setProperty("--cw",(acts.length>1?150:acts.length?122:96)+"px");
+const v=curV();full.innerHTML=v?F[v]():"";bx.classList.toggle("siri",acts.includes("siri"));bx.classList.toggle("paused",!(D.media&&D.media.playing));
+if(v==="siri")siriInit();update(Date.now())}
+function setOpen(v){clearTimeout(cl);if(v){const t=TALL.includes(curV());br("setMode",t?"tall":"exp");open=true;render();requestAnimationFrame(()=>{bx.classList.add("open");bx.classList.toggle("tall",t);if(curV()==="siri")kick()})}
+else{open=false;view=null;bx.classList.remove("open","tall");render();cl=setTimeout(()=>{if(!open)br("setMode","compact")},700)}}
+function pulse(){bx.classList.remove("swap");void bx.offsetWidth;bx.classList.add("swap")}
+/* ---- actividades ---- */
+function setMedia(o){const m=D.media,ch=!m||(o.title&&o.title!==m.title);D.media=Object.assign({pos:0,dur:200,playing:true,title:"",artist:""},m||{},o,{t0:Date.now()});
+if(!ch){update(Date.now());bx.classList.toggle("paused",!D.media.playing);return}
+const first=!m;add("media");if(first){pulse();if(S.autoM&&!open){sel="media";setOpen(true);setTimeout(()=>{if(open&&curV()==="media")setOpen(false)},4000);return}}
+render();if(open&&curV()==="media"){const a=$(".full .art");a&&a.classList.add("pop")}}
+const mpos=n=>{const m=D.media;return Math.min(m.dur,m.playing?m.pos+(n-m.t0)/1000:m.pos)};
+function incomingCall(o){D.call=Object.assign({st:"ring",name:"",number:"",photo:"",mute:0,spk:0,bt:0},o);add("call");sel="call";pulse();S.autoC?setOpen(true):render()}
+function callState(st){const c=D.call;if(!c)return;if(st==="active"){c.st="active";c.t0=Date.now()}else if(st==="end"){c.dur=c.t0?(Date.now()-c.t0)/1000:0;c.st="end";render();setTimeout(()=>{rem("call");if(!acts.length)setOpen(false)},2600);return}render()}
+function notify(o){const k=o.key||"sms",a=APPS[k]||["Aplicación","#555",(o.app||"?")[0],o.pkg];if(!S.apps[k])return;D.notif={app:o.app||a[0],c:a[1],ab:a[2],title:o.title||"",text:o.text||"",pkg:o.pkg||a[3]};add("notif");sel="notif";pulse();setOpen(true);clearTimeout(nt);nt=setTimeout(()=>{rem("notif");setOpen(false)},5000)}
+function startTimer(ms){const t=D.timer;D.timer={tot:ms||t?.tot||300000,left:ms||t?.left||300000,run:true,end:Date.now()+(ms||t?.left||300000),done:false};add("timer");sel="timer";pulse();setOpen(true)}
+function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)();[0,.3,.6].forEach(d=>{const o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.value=.15;o.connect(g);g.connect(c.destination);o.start(c.currentTime+d);o.stop(c.currentTime+d+.18)});setTimeout(()=>c.close(),1500)}catch(e){}}
+/* ---- reloj ---- */
+function update(n){
+const m=D.media,c=D.call,t=D.timer,w=D.sw;
+if(t&&t.run&&t.end-n<=0){t.run=false;t.left=0;t.done=true;sel="timer";bx.classList.remove("shake");void bx.offsetWidth;bx.classList.add("shake");beep();setOpen(true);return}
+const tl=t?(t.run?Math.max(0,t.end-n):t.left):0,sw=w?(w.run?w.acc+n-w.t0:w.acc):0;
+$$("[data-b]",bx).forEach(e=>{const k=e.dataset.b;e.textContent=k==="mt"?fmt(mpos(n)):k==="md"?fmt(m.dur):k==="ct"?fmt(c&&c.t0?(n-c.t0)/1000:0):k==="tt"?fmt(tl/1000):k==="st"?fmt(sw/1000)+"."+String(Math.floor(sw%1000/100)):""});
+$$("[data-w]",bx).forEach(e=>e.style.width=(m?mpos(n)/m.dur*100:0)+"%");
+$$("[data-ring]",bx).forEach(e=>{const f=e.dataset.ring==="timer"?(t?tl/t.tot:0):(sw%60000)/60000;e.style.strokeDashoffset=C*(1-f)});
+const p=$("#pp");if(p&&m){const k=m.playing?"pause":"play";if(p.dataset.k!==k){p.dataset.k=k;p.innerHTML=svg(k)}}
+if(m&&m.playing&&!NAT&&mpos(n)>=m.dur-.3)act("next")}
+setInterval(()=>{if(!document.hidden)update(Date.now())},250);
+/* ---- Siri ---- */
+const SI={st:"idle",lv:0,hist:[],eng:null};try{SI.hist=JSON.parse(localStorage.getItem("di_h")||"[]")}catch(e){}
+const ST={listen:"Escuchando…",think:"Procesando…",speak:"Respondiendo…",idle:""};
+function setSt(s,txt){SI.st=s;const e=$("#sst");if(e)e.textContent=txt??ST[s]}
+function addMsg(r,t){const l=$("#log");if(!l)return null;const d=document.createElement("div");d.className="msg "+r;d.textContent=t;l.appendChild(d);l.scrollTop=l.scrollHeight;return d}
+function siriInit(){const l=$("#log");SI.hist.slice(-12).forEach(m=>addMsg(m.r,m.t));setSt(SI.st)}
+const hist=()=>{try{localStorage.setItem("di_h",JSON.stringify(SI.hist.slice(-30)))}catch(e){}};
+function startSiri(){if(!S.siri){toast("Siri está desactivado en Ajustes");return}add("siri");sel="siri";view=null;pulse();setOpen(true);listen()}
+function listen(){if(hasN("listen")){setSt("listen");br("listen");return}
+if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia)){setSt("idle","Micrófono no disponible. Escribe tu mensaje.");return}
+setSt("listen");navigator.mediaDevices.getUserMedia({audio:true}).then(s=>{SI.stream=s;SI.ctx=new (window.AudioContext||window.webkitAudioContext)();SI.an=SI.ctx.createAnalyser();SI.an.fftSize=256;SI.buf=new Uint8Array(256);SI.ctx.createMediaStreamSource(s).connect(SI.an);setSt("listen","Micrófono activo · la transcripción necesita reconocimiento nativo")}).catch(()=>setSt("idle","Permiso de micrófono denegado. Escribe tu mensaje."))}
+function stopMic(){try{SI.stream&&SI.stream.getTracks().forEach(t=>t.stop());SI.ctx&&SI.ctx.close()}catch(e){}SI.stream=SI.ctx=SI.an=null}
+function send(txt){const q=$("#qi");txt=(txt??(q?q.value:"")).trim();if(!txt)return;if(q)q.value="";stopMic();SI.hist.push({r:"u",t:txt});addMsg("u",txt);hist();setSt("think");
+if(SI.eng)SI.eng(SI.hist.map(m=>({role:m.r==="u"?"user":"assistant",content:m.t}))).then(r=>reply(r)).catch(e=>sys("Error del motor: "+e.message));
+else if(hasN("askAI"))br("askAI",txt);
+else setTimeout(()=>sys("Sin motor de IA conectado. Conéctalo con Island.setAIEngine(fn) o implementa askAI() en Kotlin."),500)}
+function sys(t){setSt("idle");addMsg("sys",t)}
+function reply(t){setSt("speak");SI.hist.push({r:"a",t});hist();const d=addMsg("a","");if(!d)return;let i=0;const iv=setInterval(()=>{d.textContent=t.slice(0,++i);$("#log").scrollTop=1e5;if(i>=t.length){clearInterval(iv);setSt("idle")}},22)}
+function kick(){if(!SI.raf)SI.raf=requestAnimationFrame(draw)}
+function draw(){const c=$("#cv");if(!c||!open||curV()!=="siri"){SI.raf=0;return}const x=c.getContext("2d"),w=c.width,h=c.height,t=performance.now()/1e3;
+x.globalCompositeOperation="source-over";x.fillStyle="rgba(0,0,0,.3)";x.fillRect(0,0,w,h);x.globalCompositeOperation="lighter";
+let lv=0;if(SI.an&&SI.st==="listen"){SI.an.getByteTimeDomainData(SI.buf);let s=0;for(const v of SI.buf){const d=(v-128)/128;s+=d*d}lv=Math.min(1,Math.sqrt(s/256)*5)}SI.lv+=(lv-SI.lv)*.2;
+if(SI.st==="think"){for(let i=0;i<48;i++){const a=t*1.3+i*.131,r=26+20*Math.sin(t*2+i);x.fillStyle=`hsla(${(i*7+t*80)%360},95%,65%,.9)`;x.beginPath();x.arc(w/2+Math.cos(a)*(r+i*4.4),h/2+Math.sin(a*1.3)*r*1.1,3.2,0,6.3);x.fill()}}
+else{const amp=SI.st==="speak"?14+10*Math.sin(t*6):4+SI.lv*h*.42;[[190,1],[300,1.4],[35,.8]].forEach(([hu,f],k)=>{x.strokeStyle=`hsla(${hu},95%,62%,.9)`;x.lineWidth=3.5;x.beginPath();for(let i=0;i<=w;i+=8){const e=Math.sin(i/w*Math.PI),y=h/2+Math.sin(i*.014*f+t*3*f+k)*amp*e;i?x.lineTo(i,y):x.moveTo(i,y)}x.stroke()})}
+SI.raf=requestAnimationFrame(draw)}
+/* ---- acciones ---- */
+const TR=[["Noches de verano","Luna Azul",215],["Neón","Kairo",188],["Marea","Sol y Sal",242]];let ti=0;
+function act(a){const m=D.media,c=D.call,t=D.timer,w=D.sw,n=Date.now();
+if(a==="play"){br("media",m.playing?"pause":"play");if(!NAT){m.pos=mpos(n);m.t0=n;m.playing=!m.playing}else m.playing=!m.playing;bx.classList.toggle("paused",!m.playing);update(n)}
+else if(a==="next"||a==="prev"){br("media",a);if(!NAT){ti=(ti+(a==="next"?1:2))%3;setMedia({title:TR[ti][0],artist:TR[ti][1],dur:TR[ti][2],pos:0,playing:true})}}
+else if(a==="answer"){br("call","answer");if(!NAT)callState("active")}
+else if(a==="reject"||a==="hang"){br("call",a);if(!NAT)callState("end")}
+else if(a==="cmute"||a==="spk"){const k=a==="cmute"?"mute":"spk";c[k]=c[k]?0:1;br("call",k);render()}
+else if(a==="bt")br("call","bt")
+else if(a==="open"){br("openApp",D.notif.pkg);if(!NAT)toast("En Android abre "+D.notif.app);clearTimeout(nt);rem("notif");setOpen(false)}
+else if(a==="dis"){clearTimeout(nt);rem("notif");setOpen(false)}
+else if(a==="t1"||a==="t5"){const d=a==="t1"?6e4:3e5;t.tot=t.run?t.tot+d:Math.max(d,(t.left||0)+d);if(t.run)t.end+=d;else t.left=t.tot;if(t.done){t.done=false;}update(n)}
+else if(a==="tgo"){if(t.run){t.left=Math.max(0,t.end-n);t.run=false}else{t.end=n+(t.left||t.tot);t.run=true}render()}
+else if(a==="trs"){t.left=t.tot;t.run=false;t.done=false;render()}
+else if(a==="tstop"){rem("timer");setOpen(false)}
+else if(a==="sgo"){if(w.run){w.acc+=n-w.t0;w.run=false}else{w.t0=n;w.run=true}render()}
+else if(a==="srs"){w.acc=0;w.t0=n;render()}
+else if(a==="sx"){rem("sw");setOpen(false)}
+else if(a==="send")send()
+else if(a==="mic"){SI.stream||SI.st==="listen"?(stopMic(),setSt("idle")):listen()}
+else if(a==="cancel"){stopMic();setSt("idle");SI.st="idle";rem("siri");setOpen(false)}
+else if(a==="h-siri"){view=null;startSiri()}
+else if(a==="h-timer"){view=null;startTimer(3e5)}
+else if(a==="h-sw"){view=null;D.sw=D.sw||{acc:0,run:true,t0:n};D.sw.run=true;D.sw.t0=n;add("sw");sel="sw";setOpen(true)}
+else if(a==="h-set"){view="set";setOpen(true)}
+else if(a.startsWith("x-")){const k=a.slice(2);k==="siri"&&stopMic();rem(k);if(open&&acts.length)view="hub",setOpen(true)}}
+/* ---- eventos ---- */
+bx.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(b){e.stopPropagation();act(b.dataset.a)}});
+bx.addEventListener("input",e=>{const k=e.target.dataset.k,ap=e.target.dataset.ap;if(ap){S.apps[ap]=e.target.checked?1:0}else if(k){S[k]=e.target.type==="checkbox"?+e.target.checked:+e.target.value;if(k==="on"&&!S.on)br("close")}else return;save();apply()});
+bx.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="qi")send()});
+let g=null;
+bx.addEventListener("pointerdown",e=>{if(e.target.closest("input,button,[data-a],.log,.set"))return;g={x:e.clientX,y:e.clientY,m:0,f:0};g.lp=setTimeout(()=>{if(g&&!g.m&&S.gest){g.f=1;view="hub";setOpen(true);navigator.vibrate&&navigator.vibrate(15)}},550)});
+bx.addEventListener("pointermove",e=>{const r=bx.getBoundingClientRect();isl.style.setProperty("--px",((e.clientX-r.left)/r.width*100)+"%");isl.style.setProperty("--py",((e.clientY-r.top)/r.height*100)+"%");if(g&&(Math.abs(e.clientX-g.x)>8||Math.abs(e.clientY-g.y)>8)){g.m=1;clearTimeout(g.lp)}});
+bx.addEventListener("pointerup",e=>{if(!g)return;clearTimeout(g.lp);const dx=e.clientX-g.x,dy=e.clientY-g.y,f=g.f;g=null;if(f)return;
+if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy)){if(S.gest&&open&&acts.length>1){const i=acts.indexOf(curV());sel=acts[(i+(dx<0?1:acts.length-1))%acts.length];view=null;pulse();setOpen(true)}}
+else if(dy>24){if(S.gest)setOpen(true)}else if(dy<-24){if(S.gest)setOpen(false)}else if(Math.abs(dx)<10)setOpen(!open)});
+bx.addEventListener("pointercancel",()=>{g&&clearTimeout(g.lp);g=null});
+document.addEventListener("pointerdown",e=>{if(open&&!e.target.closest("#bx")&&!e.target.closest("#btns")&&curV()!=="siri")setOpen(false)});
+$("#btns").addEventListener("click",e=>{const k=e.target.dataset.d;if(!k)return;
+if(k==="media"){const q=TR[ti];sel="media";setMedia({title:q[0],artist:q[1],dur:q[2],pos:35,playing:true});setOpen(true)}
+else if(k==="call")incomingCall({name:"Mamá",number:"+52 55 1234 5678"})
+else if(k==="notif"){const ks=Object.keys(APPS).filter(x=>S.apps[x]);const kk=ks[Math.floor(Math.random()*ks.length)];if(!kk){toast("Todas las apps están desactivadas");return}notify({key:kk,title:"Ana",text:"¿Ya llegaste? Te estamos esperando"})}
+else if(k==="timer")startTimer(3e4)
+else if(k==="sw"){D.sw={acc:0,run:true,t0:Date.now()};add("sw");sel="sw";pulse();setOpen(true)}
+else if(k==="siri")startSiri()
+else if(k==="hub"){view="hub";setOpen(true)}
+else if(k==="set"){view="set";setOpen(true)}});
+window.Island={setMedia,removeMedia:()=>rem("media"),incomingCall,callState,notify,heard:t=>send(t),aiReply:reply,setAIEngine:f=>{SI.eng=f},setState:startSiri};
+const ck=$("#clk");if(ck){const d=new Date();ck.textContent=d.getHours()+":"+String(d.getMinutes()).padStart(2,"0")}
+apply();render();
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin:0; height:100%; background:transparent; overflow:hidden;
+    font-family: system-ui, sans-serif; }
+  #island { position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:calc(100% - 10px); max-width:120px; height:34px; background:#000; color:#fff; border-radius:20px;
+    overflow:hidden; box-sizing:border-box; padding:0 12px;
+    transition: width .35s cubic-bezier(.2,.9,.3,1.2), height .35s cubic-bezier(.2,.9,.3,1.2),
+                border-radius .35s; }
+  #island.open { width:100%; max-width:none; height:100%; border-radius:32px; padding:14px 18px; }
+  .mini { display:flex; align-items:center; justify-content:space-between; height:34px; }
+  .open .mini { display:none; }
+  .full { display:none; }
+  .open .full { display:block; }
+  .dot { width:10px; height:10px; border-radius:50%; background:#1ed760; animation:p 1s infinite alternate; }
+  @keyframes p { to { transform:scale(1.5); opacity:.6; } }
+  .title { font-weight:600; font-size:15px; }
+  .sub { font-size:12px; opacity:.6; margin-top:2px; }
+  .bar { height:4px; background:#333; border-radius:2px; margin:12px 0 8px; }
+  .bar i { display:block; height:100%; width:35%; background:#1ed760; border-radius:2px; }
+  .ctrl { display:flex; justify-content:center; gap:28px; font-size:20px; }
+</style>
+</head>
+<body>
+<div id="island">
+  <div class="mini"><div class="dot"></div><span>🎵</span></div>
+  <div class="full">
+    <div class="title">Canción de ejemplo</div>
+    <div class="sub">Artista</div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="ctrl"><span>⏮</span><span id="pp">⏸</span><span>⏭</span></div>
+  </div>
+</div>
+<script>
+  const isl = document.getElementById('island');
+  const call = (fn, ...a) => { try { Android[fn](...a); } catch(e) {} };
+  let open = false;
+
+  isl.addEventListener('click', () => {
+    open = !open;
+    if (open) { call('setExpanded', true); requestAnimationFrame(() => isl.classList.add('open')); }
+    else { isl.classList.remove('open'); setTimeout(() => call('setExpanded', false), 380); }
+  });
+
+  document.getElementById('pp').addEventListener('click', e => {
+    e.stopPropagation();
+    e.target.textContent = e.target.textContent === '⏸' ? '▶️' : '⏸';
+  });
+
+  let p = 35;
+  setInterval(() => { p = (p + 1) % 100; document.getElementById('prog').style.width = p + '%'; }, 1000);
+</script>
+</body>
+</html>
